@@ -20,13 +20,16 @@ async function getVideos(id: string) {
 
 export default async function MovieDetail({ params: { id } }: { params: { id: string } }) {
   console.log("start fetching");
-  const movie = await getMovie(id);
-  const videos = await getVideos(id);
+  // Parallel Requests: 두 개의 data fetching을 동시에(평행적으로) 진행하기 위한 Promise.all
+  const [movie, videos] = await Promise.all([getMovie(id), getVideos(id)]);
   console.log("end fetching");
 
   return (
     <>
       <h1>{movie.title}</h1>
+      {videos.map((video) => (
+        <li key={movie.id}>{video.name}</li>
+      ))}
     </>
   );
 }
