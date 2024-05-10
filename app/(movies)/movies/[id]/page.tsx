@@ -1,35 +1,29 @@
-import React from "react";
-import { API_URL } from "../../../(home)/page";
+import React, { Suspense } from "react";
+import MovieInfo from "../../../../components/movie-info";
+import MovieVideos from "../../../../components/movie-videos";
 
-async function getMovie(id: string) {
-  console.log(`Fetching movies: ${Date.now()}`);
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  const response = await fetch(`${API_URL}/${id}`);
-  return response.json();
-}
+// import해온 server component를 각각 Suspense component로 감쌈
+// Suspense component가 데이터를 fetch하기 위해 안에 있는 server component를 await함
+// fetchg하는 중에는 Suspense 내 fallback 부분을 render함
+// (fallback이 loading 페이지의 필요성을 대체함)
 
-async function getVideos(id: string) {
-  console.log(`Fetching videos: ${Date.now()}`);
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  const response = await fetch(`${API_URL}/${id}/videos`);
-  return response.json();
-}
+// 두 개의 데이터가 동시에 병렬적으로 fetch되는데
+// 하나의 요청이 완료되면 즉시 component가 render된다.
+// (둘다 끝나기를 기다리지 않음)
 
-// { params: { id } }: { params: { id: string } }
-// { searchParams: { region } }: { searchParams: { region: string } }
+// then, 현재 있는 전체 페이지가 '즉시' 로드 되고
+// (로드되는 동안 loading 페이지를 render 하지 않음)
+// 데이터가 준비되면 사용자는 바로 데이터를 받는다.
 
 export default async function MovieDetail({ params: { id } }: { params: { id: string } }) {
-  console.log("start fetching");
-  // Parallel Requests: 두 개의 data fetching을 동시에(평행적으로) 진행하기 위한 Promise.all
-  const [movie, videos] = await Promise.all([getMovie(id), getVideos(id)]);
-  console.log("end fetching");
-
   return (
-    <>
-      <h1>{movie.title}</h1>
-      {videos.map((video) => (
-        <li key={movie.id}>{video.name}</li>
-      ))}
-    </>
+    <div>
+      <Suspense fallback={<h1>Loading movie info...</h1>}>
+        <MovieInfo id={id} />
+      </Suspense>
+      <Suspense fallback={<h1>Loading movie videos...</h1>}>
+        <MovieVideos id={id} />
+      </Suspense>
+    </div>
   );
 }
